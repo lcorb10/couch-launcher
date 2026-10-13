@@ -1,0 +1,840 @@
+/* ============================================================
+   Couch Launcher — tema "sala de cine a oscuras"
+   Firma: luz ambiental (bias light) que toma el color del
+   servicio enfocado, como el Ambilight de un TV.
+   ============================================================ */
+
+:root {
+  --bg: #080b14;
+  --surface: #121a2e;
+  --surface-2: #1b2540;
+  --text: #eaeef7;
+  --muted: #7c88a6;
+  --ring: #4fe3d8; /* acento neutro cuando no hay color de servicio */
+  --accent: #4fe3d8; /* se sobrescribe dinamicamente por JS */
+  --radius: 18px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system,
+    sans-serif;
+  cursor: default;
+  user-select: none;
+}
+
+/* ---------- Luz ambiental (firma) ---------- */
+#ambient {
+  position: fixed;
+  inset: -20%;
+  z-index: 0;
+  background: radial-gradient(
+    60% 60% at 50% 40%,
+    var(--accent) 0%,
+    transparent 70%
+  );
+  opacity: 0.22;
+  filter: blur(90px) saturate(1.4);
+  transition: background 0.6s var(--ease), opacity 0.6s var(--ease);
+  pointer-events: none;
+}
+
+/* ---------- Pantallas ---------- */
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  display: none;
+  flex-direction: column;
+}
+.screen.is-active {
+  display: flex;
+}
+
+/* ============================================================
+   LAUNCHER estilo Smart TV: HERO (arriba) + DOCK (abajo)
+   ============================================================ */
+#launcher {
+  background: var(--bg);
+}
+
+/* ---------- HERO ---------- */
+#hero {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+#hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: radial-gradient(
+      75% 120% at 12% 105%,
+      color-mix(in srgb, var(--accent) 62%, transparent) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      65% 95% at 88% -10%,
+      color-mix(in srgb, var(--accent) 34%, transparent) 0%,
+      transparent 52%
+    ),
+    linear-gradient(160deg, #0c1122 0%, #06080f 72%);
+  transition: background 0.6s var(--ease);
+}
+/* Vinieta para fundir el hero con el dock y dar profundidad */
+#hero-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 42%,
+    rgba(6, 8, 15, 0.55) 82%,
+    #06080f 100%
+  );
+}
+/* Foto de la serie/pelicula caracteristica (si el servicio la define en
+   config con "art"). Full-bleed a la derecha, con degradados para que el
+   texto de la izquierda y el dock de abajo se lean bien. */
+#hero-photo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-position: center 20%;
+  background-size: cover;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 0.6s var(--ease);
+}
+#hero.has-art #hero-photo {
+  opacity: 1;
+}
+#hero.has-art #hero-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+      to right,
+      #06080f 8%,
+      rgba(6, 8, 15, 0.4) 42%,
+      transparent 70%
+    ),
+    linear-gradient(to bottom, transparent 45%, rgba(6, 8, 15, 0.7) 82%, #06080f 100%);
+}
+/* Con foto real, atenuamos el gradiente de marca y ocultamos el logo-arte */
+#hero.has-art #hero-bg {
+  opacity: 0.35;
+}
+#hero.has-art #hero-art {
+  display: none;
+}
+
+/* Estilo "portrait": foto vertical de una persona (Bad Bunny, MrBeast,
+   streamer) a la DERECHA, a lo alto del hero, con el gradiente de marca
+   fuerte a la izquierda donde va el texto. */
+#hero.art-portrait #hero-photo {
+  background-size: auto 100%;
+  background-position: right center;
+}
+#hero.art-portrait #hero-bg {
+  opacity: 0.9; /* la marca sigue fuerte, llena la izquierda */
+}
+#hero.art-portrait #hero-photo::after {
+  background: linear-gradient(
+      to right,
+      #06080f 26%,
+      rgba(6, 8, 15, 0.55) 52%,
+      transparent 82%
+    ),
+    linear-gradient(to bottom, transparent 55%, rgba(6, 8, 15, 0.65) 86%, #06080f 100%);
+}
+
+/* Logo gigante como marca de agua (arte) a la derecha */
+#hero-art {
+  position: absolute;
+  right: 6%;
+  top: 46%;
+  transform: translateY(-50%);
+  z-index: 1;
+  width: min(34vw, 480px);
+  max-height: 62%;
+  object-fit: contain;
+  opacity: 0.14;
+  filter: grayscale(0.1) drop-shadow(0 20px 50px rgba(0, 0, 0, 0.4));
+  transition: opacity 0.5s var(--ease);
+  pointer-events: none;
+}
+
+.top-bar {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 40px 60px 0;
+}
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.eyebrow {
+  font-size: 14px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+}
+.clock-row {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.clock {
+  font-size: 42px;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.date {
+  font-size: 16px;
+  color: var(--muted);
+}
+.top-actions {
+  display: flex;
+  gap: 12px;
+}
+.icon-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s var(--ease);
+}
+.icon-btn:hover,
+.icon-btn.is-focused {
+  background: rgba(255, 255, 255, 0.16);
+  transform: scale(1.05);
+}
+
+/* Info del servicio enfocado, abajo-izquierda del hero */
+#hero-info {
+  position: relative;
+  z-index: 3;
+  margin-top: auto;
+  padding: 0 60px 34px;
+  max-width: 62%;
+}
+#hero-logo {
+  height: 56px;
+  max-width: 240px;
+  object-fit: contain;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.5);
+  margin-bottom: 18px;
+}
+#hero-title {
+  font-size: 64px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+}
+#hero-desc {
+  margin-top: 12px;
+  font-size: 21px;
+  color: rgba(234, 238, 247, 0.82);
+  font-weight: 400;
+}
+#hero-open {
+  margin-top: 26px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: inherit;
+  font-size: 20px;
+  font-weight: 700;
+  color: #06121a;
+  background: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 15px 34px;
+  cursor: pointer;
+  transition: transform 0.15s var(--ease), box-shadow 0.2s var(--ease);
+}
+#hero-open .play {
+  font-size: 15px;
+}
+#hero-open:hover,
+#hero-open.is-focused {
+  transform: scale(1.04);
+  box-shadow: 0 12px 34px -8px rgba(255, 255, 255, 0.5);
+}
+
+/* ---------- DOCK (tabs + tarjetas) ---------- */
+#dock-wrap {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 auto;
+  padding: 20px 0 30px;
+  background: linear-gradient(to bottom, transparent, rgba(6, 8, 15, 0.6) 30%);
+}
+.tabs {
+  display: flex;
+  gap: 10px;
+  padding: 0 60px 4px;
+}
+.tab {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 8px 20px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.18s var(--ease);
+}
+.tab:hover {
+  color: var(--text);
+}
+.tab.is-active {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.1);
+}
+.tab.is-focused {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.row-label {
+  padding: 12px 60px 10px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.rail {
+  display: flex;
+  gap: 20px;
+  padding: 6px 60px;
+  transition: transform 0.45s var(--ease);
+  will-change: transform;
+}
+.card {
+  position: relative;
+  flex: 0 0 auto;
+  width: 168px;
+  height: 168px;
+  border-radius: 20px;
+  background: linear-gradient(
+    150deg,
+    color-mix(in srgb, var(--tile-color) 40%, #10182b) 0%,
+    #0d1424 78%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.28s var(--ease), box-shadow 0.28s var(--ease),
+    border-color 0.28s var(--ease);
+}
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    120% 100% at 50% 0%,
+    var(--tile-color) 0%,
+    transparent 68%
+  );
+  opacity: 0.55;
+  transition: opacity 0.28s var(--ease);
+}
+.card .logo {
+  position: relative;
+  z-index: 1;
+  width: 76px;
+  height: 76px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.5));
+}
+.card .letter {
+  position: relative;
+  z-index: 1;
+  font-size: 60px;
+  font-weight: 800;
+  color: #fff;
+}
+.card-name {
+  margin-top: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--muted);
+  transition: color 0.2s var(--ease);
+  max-width: 168px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.card-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 0 0 auto;
+}
+.card-cell.is-focused .card {
+  transform: translateY(-8px) scale(1.07);
+  border-color: color-mix(in srgb, var(--tile-color) 75%, white);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tile-color) 65%, transparent),
+    0 24px 60px -16px var(--tile-color);
+}
+.card-cell.is-focused .card::before {
+  opacity: 0.85;
+}
+.card-cell.is-focused .card-name {
+  color: var(--text);
+}
+
+/* App "En desarrollo": tarjeta atenuada con cinta */
+.card-cell.is-wip .card {
+  filter: grayscale(0.5);
+}
+.card-cell.is-wip .logo {
+  opacity: 0.55;
+}
+.wip-badge {
+  position: absolute;
+  z-index: 2;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #06121a;
+  background: #ffcf4a;
+  padding: 4px 0;
+}
+/* Boton del hero deshabilitado */
+#hero-open.is-disabled {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+#hero-open.is-disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.hints {
+  display: flex;
+  gap: 26px;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 16px 60px 0;
+}
+.hints b {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* ---------- Vista de servicio ----------
+   El contenido lo dibuja un WebContentsView nativo debajo de esta barra.
+   #app-view solo aporta el fondo oscuro de las franjas que la vista deja
+   libre (barra superior y, cuando aparece, el teclado). */
+#app-view {
+  background: var(--bg);
+}
+#service-bar {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 20px;
+  background: rgba(8, 11, 20, 0.96);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+#service-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.back-hint {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 18px 8px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s var(--ease);
+}
+.back-hint-icon {
+  font-size: 18px;
+  color: var(--text);
+}
+.back-hint b {
+  color: var(--muted);
+  font-weight: 500;
+}
+.back-hint:hover,
+.back-hint:focus-visible {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* ---------- Teclado en pantalla ---------- */
+.keyboard {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translate(-50%, 110%);
+  z-index: 20;
+  width: min(1100px, 94vw);
+  padding: 22px;
+  margin-bottom: 26px;
+  border-radius: 24px;
+  background: rgba(14, 20, 36, 0.86);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 40px 90px -20px rgba(0, 0, 0, 0.8);
+  transition: transform 0.36s var(--ease);
+}
+.keyboard.show {
+  transform: translate(-50%, 0);
+}
+
+.kb-preview {
+  height: 46px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  font-size: 20px;
+  color: var(--text);
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.kb-preview::after {
+  content: "";
+  width: 2px;
+  height: 24px;
+  margin-left: 2px;
+  background: var(--ring);
+  animation: blink 1.1s steps(2, start) infinite;
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.kb-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.kb-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+.key {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 62px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.12s var(--ease), background 0.15s var(--ease),
+    box-shadow 0.15s var(--ease);
+}
+.key.wide {
+  flex: 2 1 0;
+}
+.key.xwide {
+  flex: 5 1 0;
+}
+.key:hover {
+  background: #263356;
+}
+/* Tecla enfocada por el mando */
+.key.is-focused {
+  background: var(--ring);
+  color: #06121a;
+  box-shadow: 0 0 0 3px rgba(79, 227, 216, 0.4), 0 12px 30px -8px var(--ring);
+  transform: translateY(-2px);
+}
+.key:active {
+  transform: translateY(1px) scale(0.97);
+}
+
+/* ---------- Panel de configuracion ---------- */
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(4, 6, 12, 0.62);
+  backdrop-filter: blur(8px);
+}
+.settings-overlay.show {
+  display: flex;
+}
+.settings-panel {
+  width: min(680px, 92vw);
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 22px;
+  padding: 28px 30px;
+  box-shadow: 0 40px 90px -20px rgba(0, 0, 0, 0.8);
+}
+.settings-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.settings-head h2 {
+  font-size: 26px;
+  font-weight: 700;
+}
+.set-group {
+  padding: 18px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+.set-group h3 {
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+.set-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 10px 0;
+  flex-wrap: wrap;
+}
+.set-label {
+  font-size: 16px;
+  color: var(--text);
+}
+.seg {
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+}
+.seg-btn,
+.btn,
+.chip {
+  font-family: inherit;
+  color: var(--text);
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 15px;
+  transition: all 0.18s var(--ease);
+}
+.seg-btn {
+  border-color: transparent;
+  background: transparent;
+}
+.seg-btn.is-on {
+  background: var(--accent);
+  color: #06121a;
+  font-weight: 600;
+}
+.btn:hover,
+.chip:hover {
+  background: #263356;
+}
+.chip.is-on {
+  background: var(--accent);
+  color: #06121a;
+  border-color: transparent;
+  font-weight: 700;
+}
+.btn:active,
+.chip:active {
+  transform: translateY(1px);
+}
+.size-inputs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.size-inputs .x {
+  color: var(--muted);
+}
+.size-inputs input {
+  width: 92px;
+  padding: 10px 12px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+}
+.presets {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.zoom-ctl {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.zoom-ctl input[type="range"] {
+  width: 220px;
+  accent-color: var(--accent);
+}
+#zoom-val {
+  min-width: 48px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.set-hint {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.set-hint b {
+  color: var(--text);
+}
+/* Ocultar la fila de tamano cuando esta en pantalla completa */
+.settings-overlay[data-mode="full"] #size-row {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* ---------- Interruptor (switch) ---------- */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 30px;
+  flex: 0 0 auto;
+}
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.switch .slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: var(--surface-2);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  transition: background 0.2s var(--ease);
+}
+.switch .slider::before {
+  content: "";
+  position: absolute;
+  height: 22px;
+  width: 22px;
+  left: 3px;
+  top: 3px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s var(--ease);
+}
+.switch input:checked + .slider {
+  background: var(--accent);
+}
+.switch input:checked + .slider::before {
+  transform: translateX(22px);
+}
+
+/* ---------- Toast (aviso transitorio) ---------- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 48px;
+  transform: translate(-50%, 20px);
+  z-index: 40;
+  max-width: 80vw;
+  padding: 14px 24px;
+  border-radius: 999px;
+  background: rgba(14, 20, 36, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 20px 50px -18px rgba(0, 0, 0, 0.8);
+  font-size: 16px;
+  color: var(--text);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s var(--ease), transform 0.25s var(--ease);
+}
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.toast.is-error {
+  border-color: rgba(255, 90, 90, 0.5);
+  color: #ffb4b4;
+}
+
+/* Respeta reduccion de movimiento */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

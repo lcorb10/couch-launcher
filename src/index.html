@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Couch Launcher</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Capa de luz ambiental que se tine con el color del servicio -->
+    <div id="ambient"></div>
+
+    <!-- ============ PANTALLA LAUNCHER (estilo Smart TV) ============ -->
+    <main id="launcher" class="screen is-active">
+      <!-- HERO: arte cinematografico del servicio enfocado -->
+      <section id="hero">
+        <div id="hero-bg"></div>
+        <div id="hero-photo"></div>
+        <div id="hero-glow"></div>
+        <img id="hero-art" alt="" />
+
+        <header class="top-bar">
+          <div class="brand">
+            <span class="eyebrow" id="greeting">Buenas</span>
+            <div class="clock-row">
+              <span class="clock" id="clock">--:--</span>
+              <span class="date" id="date"></span>
+            </div>
+          </div>
+          <div class="top-actions">
+            <button class="icon-btn" id="settings-btn" title="Configuración">⚙</button>
+            <button class="icon-btn" id="quit-btn" title="Salir (Alt+F4)">✕</button>
+          </div>
+        </header>
+
+        <div id="hero-info">
+          <img id="hero-logo" alt="" />
+          <h1 id="hero-title"></h1>
+          <p id="hero-desc"></p>
+          <button id="hero-open"><span class="play">▶</span> Abrir</button>
+        </div>
+      </section>
+
+      <!-- Tabs de categoria + dock de apps -->
+      <section id="dock-wrap">
+        <div id="tabs" class="tabs"><!-- tabs por JS --></div>
+        <div class="row-label" id="row-label">Tus apps</div>
+        <div class="rail" id="rail"><!-- tarjetas por JS --></div>
+        <div class="hints">
+          <span><b>D-Pad / Mouse</b> mover</span>
+          <span><b>A / Click</b> abrir</span>
+          <span><b>Arriba</b> categorías</span>
+        </div>
+      </section>
+    </main>
+
+    <!-- ============ PANTALLA APP (servicio) ============ -->
+    <!-- El contenido del servicio lo dibuja el proceso principal con un
+         WebContentsView (vista nativa), colocado justo debajo de esta
+         barra. La barra queda en la franja que la vista deja libre. -->
+    <section id="app-view" class="screen">
+      <div id="service-bar">
+        <button id="back-hint" class="back-hint" title="Volver al inicio (B / Esc)">
+          <span class="back-hint-icon">←</span>
+          <span>Volver al inicio <b>(B / Esc)</b></span>
+        </button>
+        <span id="service-name"></span>
+      </div>
+    </section>
+
+    <!-- Aviso transitorio (p.ej. "Abriendo Netflix en tu navegador…") -->
+    <div id="toast" class="toast"></div>
+
+    <!-- ============ PANEL DE CONFIGURACION ============ -->
+    <div id="settings" class="settings-overlay" aria-hidden="true">
+      <div class="settings-panel">
+        <div class="settings-head">
+          <h2>Configuración</h2>
+          <button class="icon-btn" id="settings-close" title="Cerrar (Esc)">✕</button>
+        </div>
+
+        <section class="set-group">
+          <h3>Pantalla</h3>
+          <div class="set-row">
+            <span class="set-label">Modo</span>
+            <div class="seg" id="seg-mode">
+              <button data-mode="full" class="seg-btn is-on">Pantalla completa</button>
+              <button data-mode="window" class="seg-btn">Ventana</button>
+            </div>
+          </div>
+          <div class="set-row" id="size-row">
+            <span class="set-label">Tamaño de ventana</span>
+            <div class="size-inputs">
+              <input type="number" id="win-w" min="640" step="10" value="1280" />
+              <span class="x">×</span>
+              <input type="number" id="win-h" min="480" step="10" value="720" />
+              <button class="btn" id="apply-size">Aplicar</button>
+            </div>
+          </div>
+          <div class="set-row">
+            <span class="set-label">Presets</span>
+            <div class="presets">
+              <button class="chip" data-w="1280" data-h="720">1280×720</button>
+              <button class="chip" data-w="1600" data-h="900">1600×900</button>
+              <button class="chip" data-w="1920" data-h="1080">1920×1080</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="set-group">
+          <h3>Servicios</h3>
+          <div class="set-row">
+            <span class="set-label">Zoom del contenido</span>
+            <div class="zoom-ctl">
+              <input type="range" id="zoom" min="50" max="150" step="5" value="100" />
+              <span id="zoom-val">100%</span>
+            </div>
+          </div>
+          <div class="set-row">
+            <span class="set-label">Si se ve mal / con franja negra</span>
+            <button class="btn" id="refit-btn">Re-ajustar pantalla del servicio</button>
+          </div>
+          <div class="set-row">
+            <span class="set-label">Teclado automático en Netflix/DRM (Chrome)</span>
+            <label class="switch">
+              <input type="checkbox" id="ext-kb" checked />
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="set-row">
+            <span class="set-label">Teclado de Windows (respaldo)</span>
+            <button class="btn" id="osk-btn">Mostrar</button>
+          </div>
+        </section>
+
+        <section class="set-group">
+          <h3>Sistema</h3>
+          <div class="set-row">
+            <span class="set-label">Abrir al encender el PC</span>
+            <label class="switch">
+              <input type="checkbox" id="autostart" />
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="set-row">
+            <span class="set-label">Apagar el PC en…</span>
+            <div class="presets" id="shutdown-opts">
+              <button class="chip" data-min="0">Nunca</button>
+              <button class="chip" data-min="30">30 min</button>
+              <button class="chip" data-min="60">1 h</button>
+              <button class="chip" data-min="120">2 h</button>
+              <button class="chip" data-min="180">3 h</button>
+            </div>
+          </div>
+        </section>
+
+        <p class="set-hint">
+          Si el servicio se ve solo en una franja, prueba <b>Re-ajustar</b>, o
+          cambia a <b>Ventana</b> y vuelve a <b>Pantalla completa</b>.
+        </p>
+      </div>
+    </div>
+
+    <!-- ============ TECLADO EN PANTALLA ============ -->
+    <div id="keyboard" class="keyboard" aria-hidden="true">
+      <div class="kb-preview" id="kb-preview"></div>
+      <div class="kb-grid" id="kb-grid"><!-- teclas por JS --></div>
+    </div>
+
+    <script src="renderer.js"></script>
+  </body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "couch-launcher",
+  "version": "0.1.0",
+  "description": "Launcher tipo Smart TV para PC: navega servicios de streaming con mouse o mando, con teclado en pantalla automatico.",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "start:widevine": "electron ."
+  },
+  "author": "Sebastian",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "github:castlabs/electron-releases#v42.5.2+wvcus"
+  },
+  "comment_widevine": "Usa el fork de Electron de castlabs (incluye Widevine) para que Netflix/Disney+/Prime/HBO Max/Paramount+/Apple TV+ reproduzcan video con DRM. Ver README, seccion 'DRM'.",
+  "dependencies": {
+    "chrome-remote-interface": "^0.34.0"
+  }
+}

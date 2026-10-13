@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Teclado</title>
+    <style>
+      :root {
+        --surface: #121a2e;
+        --surface-2: #1b2540;
+        --text: #eaeef7;
+        --ring: #4fe3d8;
+        --ease: cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        user-select: none;
+      }
+      html,
+      body {
+        height: 100%;
+        background: transparent;
+        overflow: hidden;
+        font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+        cursor: default;
+      }
+      #kb {
+        position: fixed;
+        left: 50%;
+        bottom: 22px;
+        transform: translateX(-50%);
+        width: min(1100px, 96vw);
+        padding: 20px;
+        border-radius: 24px;
+        background: rgba(14, 20, 36, 0.94);
+        backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 40px 90px -20px rgba(0, 0, 0, 0.85);
+      }
+      .kb-preview {
+        height: 44px;
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        font-size: 20px;
+        color: var(--text);
+        overflow: hidden;
+        white-space: nowrap;
+      }
+      .kb-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+      }
+      .kb-row {
+        display: flex;
+        gap: 9px;
+        justify-content: center;
+      }
+      .key {
+        flex: 1 1 0;
+        min-width: 0;
+        height: 58px;
+        border-radius: 12px;
+        background: var(--surface-2);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        color: var(--text);
+        font-size: 20px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.12s var(--ease), transform 0.1s var(--ease);
+      }
+      .key.wide {
+        flex: 2 1 0;
+      }
+      .key.xwide {
+        flex: 5 1 0;
+      }
+      .key:hover {
+        background: #263356;
+      }
+      .key:active {
+        transform: translateY(1px) scale(0.97);
+        background: var(--ring);
+        color: #06121a;
+      }
+      /* Cursor de navegacion con mando (DS4/Xbox). */
+      .key.is-focused {
+        background: var(--ring);
+        color: #06121a;
+        box-shadow: 0 0 0 3px rgba(79, 227, 216, 0.5);
+        transform: scale(1.04);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="kb">
+      <div class="kb-preview" id="kb-preview"></div>
+      <div class="kb-grid" id="kb-grid"></div>
+    </div>
+    <script src="keyboard-window.js"></script>
+  </body>
+</html>
